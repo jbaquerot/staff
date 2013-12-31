@@ -3,9 +3,17 @@ from django.db import models
 # Create your models here.
 
 class WorkOrder(models.Model):
-	processed = models.NullBooleanField(default=False)
+	CREATED = 'CR'
+	PROCESSED = 'PR'
+	DONE = 'DN'
+	STATES = (
+			(CREATED, 'Created'),
+			(PROCESSED, 'Processed'),
+			(DONE, 'Done'),
+		)
+	state = models.CharField(max_length=2, default=CREATED, choices = STATES)
 	staffId = models.CharField(max_length=6)
-	woDate = models.DateField()
+	woDate = models.DateField(auto_now=True)
 	total_No_Taxes = models.FloatField()
 	woFile = models.FileField(upload_to='documents/%Y/%m/%d')
 

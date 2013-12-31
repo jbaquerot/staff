@@ -41,11 +41,14 @@ def processWorkOrder(modeladmin, request, queryset):
         					woDate=orderProcess[1]['Period'], hours = orderProcess[1]['Hours'], 
         					perctHours = orderProcess[1]['Percentage'], total = orderProcess[1]['Amount'])
         	order.save()
-        workorder.processed = True
+        workorder.state = WorkOrder.PROCESSED
         workorder.staffId = getAcronym(workorder.woFile.name)
-        workorder.save()
+        print workorder 
+        workorder.save(force_update=True, update_fields=['state','staffId'])
 
 processWorkOrder.short_description = "Process selected workorders"
+
+
 
 class OrderInline(admin.TabularInline):
 	model = Order
@@ -58,14 +61,41 @@ class OrderInline(admin.TabularInline):
 	]
 
 class WorkOrderAdmin(admin.ModelAdmin):
-	readonly_fields = ['processed', 'staffId']
+
+	readonly_fields = ['staffId','woDate']
 	fieldsets = [
-		(None, {'fields': ['staffId', 'processed', 'woDate', 'total_No_Taxes', 'woFile']}),
+		(None, {'fields': ['staffId', 'state', 'woDate', 'total_No_Taxes', 'woFile']}),
 	]
-	#fields = ['processed','staffId', 'woDate', 'total_No_Taxes', 'woFile']
-	list_display = ('staffId', 'processed','woDate', 'total_No_Taxes', 'woFile')
+	list_display = ('staffId', 'state','woDate', 'total_No_Taxes', 'woFile')
 	inlines = [OrderInline]
 	actions = [processWorkOrder]
+	list_filter = ['state', 'woDate', 'staffId']
+	"""
+	def processWorkOrder(self, request, queryset):
+		deleteOldOrders(self)
+		workOrderProcess = getReport(self.woFile).groupby(['staffId','Project','Period'], as_index=False).sum()
+    	totHours=workOrderProcess['Hours'].sum()
+    	bill = float(workorder.total_No_Taxes)
+    	workOrderProcess['Percentage'] = workOrderProcess['Hours']/totHours
+    	workOrderProcess['Amount'] = workOrderProcess['Percentage']*bill
+    	for orderProcess in workOrderProcess.iterrows():
+        	#print orderProcess[1]
+        	order = Order(workOrder=workorder, staffId=orderProcess[1]['staffId'], 
+        					project = orderProcess[1]['Project'],
+        					woDate=orderProcess[1]['Period'], hours = orderProcess[1]['Hours'], 
+        					perctHours = orderProcess[1]['Percentage'], total = orderProcess[1]['Amount'])
+        	order.save()
+    	self.state = WorkOrder.PROCESSED
+    	self.staffId = getAcronym(workorder.woFile.name)
+    	print self 
+    	#self.save(force_update=True, update_fields=['state','staffId'])
+    	queryset.update(state=self.state, staffId=self.staffId)
+
+	processWorkOrder.short_description = "Process selected workorders"
+	"""
+
+
+
 
 
 
