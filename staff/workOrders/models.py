@@ -20,9 +20,14 @@ class WorkOrder(models.Model):
 	def __unicode__(self):
 		return self.staffId + ':' + str(self.woDate)
 
+	def deleteAllOrders(self):
+		for order in Order.objects.filter(workOrder__id=self.id):
+			order.delete()
+	
+
 
 class Order(models.Model):
-	workOrder = models.ForeignKey(WorkOrder)
+	workOrder = models.ForeignKey(WorkOrder, on_delete=models.CASCADE)
 	staffId = models.CharField(max_length=6)
 	project = models.CharField(max_length=30)
 	woDate = models.DateField()
